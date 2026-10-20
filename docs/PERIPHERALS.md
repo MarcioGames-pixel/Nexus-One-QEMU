@@ -51,3 +51,18 @@ The Android app must request only permissions it uses, explain why they are need
 The CI now runs `tools/check_network_audio_models.sh` against the compiled development binary. It checks that QEMU exposes the reusable LAN9118 Ethernet model and PL041 audio model, verifies that `nexus-one` is registered, and starts the models on QEMU's `versatilepb` reference board, whose IRQ wiring is already implemented.
 
 **Scope boundary:** this is a model/CLI smoke test, not yet a working Nexus One guest network or sound path. The Nexus One machine does not yet have a modeled interrupt controller, a proven guest-compatible NIC/audio register map, or an Android host bridge. The test intentionally uses `versatilepb` for model instantiation instead of attaching devices at invented Nexus One addresses. The next implementation step is to establish the guest-visible interrupt/device wiring and test it with a guest kernel before calling either feature supported.
+
+## Firmware evidence from local EPE54B scan (2026-10-20)
+
+A read-only printable-string scan of the user's local `system.img` and gzip ramdisk produced the following leads. These are observations from strings, not proof that the guest can boot or that the listed hardware has been emulated.
+
+- The ramdisk contains an `hciattach`-style command with `--patchram /etc/firmware/bcm4329.hcd /dev/ttyHS0`. Treat this first as evidence for a firmware-loaded UART HCI device (likely Bluetooth), **not** as proof that `bcm4329.hcd` is the Wi-Fi firmware. The BCM4329 is a combo-chip family, so Wi-Fi and Bluetooth paths must be distinguished.
+- The ramdisk contains a `wpa_supplicant` command using `-Dwext` and `-ieth0`, along with `dhcpcd -ABKL eth0` and Wi-Fi DHCP properties. The interface name and exact startup ordering should be confirmed from the complete `init.mahimahi.rc` and any Wi-Fi config files before choosing a virtual NIC or Android bridge.
+- The ramdisk and system image reference Qualcomm-style audio endpoints including `/dev/msm_pcm_out`, `/dev/msm_pcm_in`, `/dev/msm_pcm_ctl`, `/dev/msm_audio_ctl`, `/dev/msm_snd`, `/dev/adsp/`, and `/dev/htc-acoustic`. This points to a Qualcomm MSM audio driver/HAL contract, not automatically to ARM PrimeCell PL041.
+- The ramdisk includes `/dev/msm_camera/`, `/dev/pmem_camera`, and camera service strings, suggesting a legacy MSM camera HAL path that would need its expected kernel driver and memory interfaces.
+- The ramdisk mentions `/dev/qmi*`, `net.rmnet0`, `rild`, and a property `ro.radio.use-ppp no`. These are cellular/RIL clues; forwarding the host's internet is still not equivalent to emulating the radio protocol.
+- The ramdisk contains fake battery properties, while system strings mention `/sys/class/power_supply`. These alone do not identify the precise guest-visible battery driver contract.
+
+### Next evidence to collect
+
+Inspect the full `init.mahimahi.rc`, relevant `init.rc` service definitions, Wi-Fi configuration files, and audio HAL library names from the local firmware. Keep proprietary images local. Do not add a guest NIC/audio device at speculative addresses until the machine's interrupt controller, memory map, and guest driver interface have been established.

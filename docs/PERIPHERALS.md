@@ -44,3 +44,10 @@ The current `nexus-one` machine is only a registration scaffold. These periphera
 ## Security and compatibility
 
 The Android app must request only permissions it uses, explain why they are needed, handle denial/revocation, and avoid recording or transmitting camera/microphone data without an explicit user action. Do not promise original Nexus One 3G/Wi-Fi driver compatibility until the relevant QSD8x50-era hardware and Android 2.1 interfaces have been reproduced.
+
+
+## Current first-stage work (network and audio)
+
+The CI now runs `tools/check_network_audio_models.sh` against the compiled development binary. It checks that QEMU exposes the reusable LAN9118 Ethernet model and PL041 audio model, verifies that `nexus-one` is registered, and starts the models on QEMU's `versatilepb` reference board, whose IRQ wiring is already implemented.
+
+**Scope boundary:** this is a model/CLI smoke test, not yet a working Nexus One guest network or sound path. The Nexus One machine does not yet have a modeled interrupt controller, a proven guest-compatible NIC/audio register map, or an Android host bridge. The test intentionally uses `versatilepb` for model instantiation instead of attaching devices at invented Nexus One addresses. The next implementation step is to establish the guest-visible interrupt/device wiring and test it with a guest kernel before calling either feature supported.

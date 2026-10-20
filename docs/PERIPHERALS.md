@@ -66,3 +66,16 @@ A read-only printable-string scan of the user's local `system.img` and gzip ramd
 ### Next evidence to collect
 
 Inspect the full `init.mahimahi.rc`, relevant `init.rc` service definitions, Wi-Fi configuration files, and audio HAL library names from the local firmware. Keep proprietary images local. Do not add a guest NIC/audio device at speculative addresses until the machine's interrupt controller, memory map, and guest driver interface have been established.
+
+## Init-script findings from full EPE54B ramdisk inspection (2026-10-20)
+
+The full read-only report for `init.mahimahi.rc` and `init.rc` adds more precise configuration evidence:
+
+- `init.mahimahi.rc` has an `on boot` block that creates Wi-Fi/DHCP directories and configures Bluetooth-related sysfs permissions under `/sys/class/rfkill/rfkill0`, `/sys/module/board_mahimahi/parameters/bdaddr`, and `/sys/class/switch/dock/bt_pin`. The guest kernel would need to expose compatible nodes for these operations to have their intended effect.
+- `wpa_supplicant` is declared with `-Dwext -ieth0`, and `dhcpcd` with `eth0`; both service definitions include `disabled` and `oneshot`. This means the declarations alone do not establish when they are started. Trace Android Wi-Fi framework/HAL behavior and property or init triggers before choosing an emulated NIC contract.
+- The Bluetooth patch loader is declared as a disabled service: `brcm_patchram_plus --enable_hci --enable_lpm --baudrate 3000000 --patchram /etc/firmware/bcm4329.hcd /dev/ttyHS0`. This supports investigating UART HCI plus RF-kill/power controls, but does not prove that a guest-visible UART or Bluetooth controller is emulated.
+- The init script sets `ro.ril.def.agps.mode 2` and fast-dormancy properties; `init.rc` declares `/system/bin/rild` with radio-related groups and sockets. These are telephony-stack configuration clues, not proof that a modem, SIM, QMI channel, or cellular data path is available.
+- The generic `init.rc` mounts `mtd@system`, `mtd@userdata`, and `mtd@cache` as YAFFS2, then starts core Android services including `servicemanager`, `zygote`, and `mediaserver`. A boot attempt must provide compatible MTD/YAFFS2 partition mapping (or a carefully validated alternative) and the kernel interfaces expected by the legacy Android 2.1 userspace.
+- `init.mahimahi.rc` also configures CPU-frequency sysfs, LEDs, timed-output vibrator, and `akmd`. These are additional board-specific dependencies; missing sysfs nodes can cause individual operations to fail and should be separated from fatal boot blockers using guest logs.
+
+The report is only a 12-entry ramdisk archive and does not show all Android system files or the full kernel driver configuration. The next useful local evidence is to inspect `system.img` for Wi-Fi HAL/library names and the exact `wpa_supplicant.conf`/firmware paths, and inspect the kernel config or driver strings for the mahimahi/QSD8x50 interfaces. Do not infer that the QEMU board is compatible until guest-side boot and device tests demonstrate it.

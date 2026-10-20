@@ -43,12 +43,15 @@ jobs:
         working-directory: qemu-src
         run: ninja -C build qemu-system-arm
 
-      - name: Verify emulator and list supported machines
+      - name: Verify Nexus One machine registration
         working-directory: qemu-src
+        shell: bash
         run: |
+          set -euo pipefail
           ./build/qemu-system-arm --version
           ./build/qemu-system-arm -machine help | tee ../qemu-machines.txt
-          ./build/qemu-system-arm -cpu help | head -80
+          grep -E '^[[:space:]]*nexus-one([[:space:]]|$)' ../qemu-machines.txt
+          ./build/qemu-system-arm -M nexus-one,help
 
       - name: Upload QEMU ARM prototype
         uses: actions/upload-artifact@v4

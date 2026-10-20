@@ -1,0 +1,61 @@
+name: Build QEMU ARM prototype
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-qemu-arm.yml"
+      - "tools/**"
+      - "docs/**"
+      - "README.md"
+
+permissions:
+  contents: read
+
+jobs:
+  build-qemu-arm:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Checkout QEMU source fork
+        uses: actions/checkout@v4
+        with:
+          repository: MarcioGames-pixel/qemu
+          ref: master
+          path: qemu-src
+          fetch-depth: 1
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git ninja-build pkg-config python3 python3-venv python3-pip libglib2.0-dev libpixman-1-dev zlib1g-dev libfdt-dev libslirp-dev
+
+      - name: Configure QEMU ARM system emulator
+        working-directory: qemu-src
+        run: |
+          ./configure --target-list=arm-softmmu --disable-werror --disable-docs --disable-gtk --disable-sdl --disable-vnc
+
+      - name: Compile QEMU ARM
+        working-directory: qemu-src
+        run: ninja -C build qemu-system-arm
+
+      - name: Verify emulator and list supported machines
+        working-directory: qemu-src
+        run: |
+          ./build/qemu-system-arm --version
+          ./build/qemu-system-arm -machine help | tee ../qemu-machines.txt
+          ./build/qemu-system-arm -cpu help | head -80
+
+      - name: Upload QEMU ARM prototype
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-system-arm-linux-x86_64
+          path: |
+            qemu-src/build/qemu-system-arm
+            qemu-machines.txt
+          if-no-files-found: error
+          retention-days: 7

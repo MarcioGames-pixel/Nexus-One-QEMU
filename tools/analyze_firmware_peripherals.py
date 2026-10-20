@@ -33,8 +33,8 @@ PATTERNS = {
         r"battery|power_supply|charger|pmic|rpc.*battery|healthd", re.I
     ),
     "device_init": re.compile(
-        r"init\.[a-z0-9_-]+\.rc|service[[:space:]]+ril-daemon|"
-        r"service[[:space:]]+.*audio|/dev/(msm|smd|tty|sound|radio)",
+        r"init\.[a-z0-9_-]+\.rc|service\\s+ril-daemon|"
+        r"service\\s+.*audio|/dev/(msm|smd|tty|sound|radio)",
         re.I,
     ),
 }

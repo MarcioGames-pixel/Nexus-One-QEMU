@@ -61,6 +61,9 @@ jobs:
           grep -E '^[[:space:]]*nexus-one([[:space:]]|$)' ../qemu-machines.txt
           ./build/qemu-system-arm -M nexus-one,help
 
+      - name: Smoke-test reusable network and audio models
+        run: bash tools/check_network_audio_models.sh qemu-src/build/qemu-system-arm
+
       - name: Upload QEMU ARM prototype
         uses: actions/upload-artifact@v4
         with:

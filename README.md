@@ -31,6 +31,10 @@ python3 tools/analyze_firmware.py /path/to/boot.img --system-dir /path/to/extrac
 
 The script prints the classic Android boot header fields, SHA-256, and selected properties from `build.prop`. It does not modify firmware.
 
-## Documentation
+## Current hardware work
 
-See [docs/ROADMAP.md](docs/ROADMAP.md) for the milestones and known limitations.
+The companion [QEMU fork](https://github.com/MarcioGames-pixel/qemu) now has an initial `-M nexus-one` bring-up scaffold. It maps RAM at `0x20000000` and uses legacy machine ID `2304`, but it does **not** yet emulate the Qualcomm QSD8x50 peripherals and cannot be considered bootable.
+
+- [Hardware bring-up plan](docs/NEXUS_ONE_HARDWARE.md)
+- [Nexus One visual skin specification](docs/SKIN.md)
+- [Technical roadmap](docs/ROADMAP.md)

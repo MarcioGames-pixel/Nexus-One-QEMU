@@ -55,6 +55,8 @@ def main() -> int:
     p.add_argument("ramdisk", type=Path)
     p.add_argument("--max-bytes", type=int, default=24000,
                    help="Maximum bytes printed for each file")
+    p.add_argument("--full", action="store_true",
+                   help="Print complete selected .rc files instead of matching context")
     args = p.parse_args()
     raw = args.ramdisk.read_bytes()
     if raw.startswith(b"\x1f\x8b"):
@@ -69,7 +71,7 @@ def main() -> int:
         text = payload.decode("utf-8", "replace")
         lines = text.splitlines()
         matching = [i for i, line in enumerate(lines) if TEXT_HINT.search(line)]
-        if name.lower().endswith(".rc") and matching:
+        if name.lower().endswith(".rc") and matching and not args.full:
             wanted = set()
             for i in matching:
                 wanted.update(range(max(0, i - 2), min(len(lines), i + 3)))

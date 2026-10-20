@@ -29,6 +29,10 @@ jobs:
           path: qemu-src
           fetch-depth: 1
 
+      - name: Record QEMU source revision
+        working-directory: qemu-src
+        run: git log -1 --format='%H %s'
+
       - name: Install build dependencies
         run: |
           sudo apt-get update

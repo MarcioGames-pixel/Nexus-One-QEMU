@@ -27,7 +27,7 @@ grep -Eq '^[[:space:]]*nexus-one([[:space:]]|$)' <<<"$machines" || {
 # The versatilepb reference board wires LAN9118/PL041 with a real IRQ
 # controller. This verifies the model CLI and audio backend without claiming
 # those board addresses/drivers are valid for Nexus One.
-"$QEMU_BIN" -M versatilepb -display none -nodefaults \
+"$QEMU_BIN" -M versatilepb,audiodev=audio0 -display none -nodefaults \
   -nic user,model=lan9118 \
   -audiodev none,id=audio0 \
   -device pl041,audiodev=audio0 \

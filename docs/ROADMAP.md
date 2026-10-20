@@ -6,10 +6,10 @@ The target is the HTC/Google Nexus One (codename "passion", board "mahimahi") ru
 
 ## Milestones
 
-1. **Repository and repeatable CI** — compile a stock QEMU ARM system-emulator binary and record which machine models it contains.
+1. **Repository and repeatable CI** — compile a QEMU ARM system-emulator binary and record which machine models it contains. An initial `nexus-one` machine scaffold has been added to the companion QEMU fork; build validation is still required.
 2. **Firmware analysis** — inspect the boot image header and extracted build properties locally. Do not commit proprietary firmware images or private signing material.
 3. **Hardware research** — document the CPU, memory map, interrupt controller, timers, display, input, flash/MTD and boot protocol expected by the Nexus One kernel.
-4. **Machine-model prototype** — implement and test missing devices in QEMU only after their interfaces and register behavior are supported by reliable documentation or source evidence.
+4. **Machine-model prototype** — the initial machine registration is only a scaffold. Implement and test missing QSD8x50 devices in QEMU only after their interfaces and register behavior are supported by reliable documentation or source evidence.
 5. **Boot experiments** — test the kernel with trace logging and minimal devices; a successful QEMU build is not evidence that Android boots.
 6. **Android APK** — only after a usable emulator core exists, package the core and a UI using the Android NDK/SDK, then test the APK on ARM64 Android.
 

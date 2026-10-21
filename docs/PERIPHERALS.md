@@ -79,3 +79,18 @@ The full read-only report for `init.mahimahi.rc` and `init.rc` adds more precise
 - `init.mahimahi.rc` also configures CPU-frequency sysfs, LEDs, timed-output vibrator, and `akmd`. These are additional board-specific dependencies; missing sysfs nodes can cause individual operations to fail and should be separated from fatal boot blockers using guest logs.
 
 The report is only a 12-entry ramdisk archive and does not show all Android system files or the full kernel driver configuration. The next useful local evidence is to inspect `system.img` for Wi-Fi HAL/library names and the exact `wpa_supplicant.conf`/firmware paths, and inspect the kernel config or driver strings for the mahimahi/QSD8x50 interfaces. Do not infer that the QEMU board is compatible until guest-side boot and device tests demonstrate it.
+
+
+## Additional system.img string findings (2026-10-20)
+
+A follow-up printable-string scan of the local EPE54B `system.img` returned the following additional leads. These are library/property strings only; they do not prove that the corresponding kernel drivers are present or that the emulator supports the features.
+
+- **Board/platform:** `ro.board.platform=qsd8k` and the libraries `copybit.qsd8k.so`, `gralloc.qsd8k.so`, and `lights.qsd8k.so` identify a QSD8K-specific Android hardware integration path. The gralloc/copybit libraries are evidence of the expected graphics buffer and copy interfaces, not evidence of a working emulated GPU.
+- **Audio framework and HAL:** `libaudio.so`, `libaudioflinger.so`, `libaudiopolicy.so`, and `libaudiopolicygeneric.so` appear in the image. The earlier device-node clues (`/dev/msm_pcm_out`, `/dev/msm_pcm_in`, `/dev/msm_audio_ctl`, etc.) suggest the original guest expects Qualcomm-specific audio interfaces. A generic PL041 model on another QEMU board is not a substitute for this contract.
+- **Camera framework:** `libcamera.so` and `libcameraservice.so` are present as string references, consistent with a legacy Android camera service/HAL. The required sensor, memory, and MSM camera driver behavior remains unverified.
+- **Wireless:** references include `wpa_supplicant`, `wpa_driver_priv_driver_cmP`, and `/system/etc/wifi/wpa_supplicant.conf`. The previously observed `eth0` in the board init script versus `wlan0` in other strings is unresolved; do not select an emulated NIC/interface name from this evidence alone.
+- **Other hardware HAL:** `gralloc.qsd8k.so` and `lights.qsd8k.so` indicate additional board-specific hardware modules. The output also contains generic framework symbols and therefore must not be interpreted as a complete inventory of drivers.
+
+### Next investigation
+
+Determine the actual filesystem format of `system.img`, then extract or list its contents locally and inspect the relevant files (especially `/system/lib/hw/`, Wi-Fi configuration, and any kernel modules). Keep proprietary firmware local. Prefer exact filenames, ELF metadata, and dependency inspection over further undirected string scans. No hardware feature should be marked implemented until a guest-side test verifies its device contract.
